@@ -1,9 +1,4 @@
-/* 
-   Ashly Photo Booth Stylesheet
-   Design Philosophy: Flat layout, single camera accent color, premium typography, no gradients/glassmorphism.
-*/
 
-/* Core Reset & Variables */
 :root {
   --bg-color: #121212;
   --panel-bg: #1a1a1a;
@@ -130,6 +125,24 @@ p {
   gap: var(--spacing-xs);
 }
 
+/* Form inputs */
+.form-input {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  border-radius: var(--border-radius);
+  outline: none;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.form-input:focus {
+  border-color: var(--accent-color);
+}
+
 /* ==========================================================================
    1. LANDING SCREEN
    ========================================================================== */
@@ -192,6 +205,30 @@ p {
 
 .landing-action {
   margin-top: var(--spacing-xs);
+}
+
+.room-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.join-box {
+  display: flex;
+  gap: var(--spacing-xs);
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .room-options {
+    flex-direction: row;
+    align-items: center;
+  }
+  .join-box {
+    flex-grow: 1;
+    max-width: 380px;
+  }
 }
 
 /* ==========================================================================
@@ -342,9 +379,14 @@ p {
   background-color: #10b981;
 }
 
-.viewport-device-info {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+.room-status-badge {
+  font-size: 0.8rem;
+  background-color: #241414;
+  border: 1px solid var(--accent-color);
+  color: var(--text-color);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 /* Live Stream Container */
@@ -361,11 +403,130 @@ p {
   justify-content: center;
 }
 
-#webcam, #preview-canvas, #save-canvas {
+/* Split-screen layout grid */
+.split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.camera-panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #080808;
+}
+
+#local-panel {
+  border-right: 1px solid #181818;
+}
+
+#webcam, #webcam-remote, #preview-canvas, #save-canvas {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scaleX(-1); /* Mirror camera stream */
+}
+
+#webcam {
+  transform: scaleX(-1); /* Mirror local webcam preview */
+}
+
+#webcam-remote {
+  transform: none; /* No mirror remote stream */
+}
+
+/* Name Badges matching getangie.com style */
+.name-badge {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  left: var(--spacing-sm);
+  color: #ffffff;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 20px;
+  z-index: 5;
+}
+
+#badge-local {
+  background-color: #3b82f6; /* Premium light blue */
+}
+
+#badge-remote {
+  background-color: #ec4899; /* Premium pink */
+}
+
+/* Waiting for Friend Overlay Card */
+.waiting-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #121212;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  z-index: 4;
+}
+
+.waiting-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+  align-items: center;
+}
+
+.waiting-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.waiting-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 0.25rem;
+}
+
+.share-widget {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#share-link-input {
+  flex-grow: 1;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  font-family: inherit;
+  border-radius: var(--border-radius);
+  outline: none;
+}
+
+.waiting-or-code {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.waiting-or-code strong {
+  color: var(--accent-color);
+  font-size: 0.95rem;
 }
 
 /* Shutter Flash Animation */
@@ -665,7 +826,7 @@ p {
   object-fit: contain;
 }
 
-/* Responsive adjustment for Mobile Shutter view */
+/* Responsive adjustment for Mobile view */
 @media (max-width: 1023px) {
   .viewport-area, .preview-image-area {
     min-height: auto;
