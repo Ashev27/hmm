@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ashly Photo Booth</title>
+  <!-- Outfit Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- MediaPipe Hands CDN scripts for Hand Sign Capture -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- 1. Landing / Welcome Screen -->
+  <section id="screen-landing" class="screen active">
+    <div class="landing-container">
+      <header class="app-header">
+        <span class="app-badge">Ashly Booth</span>
+        <h1 class="landing-title">Take photos in your browser.</h1>
+      </header>
+      
+      <div class="landing-content">
+        <p class="landing-description">
+          This photo booth lets you snap pictures using your computer or phone camera. You can choose from ten visual styles, manually adjust parameters like brightness and grain, and download your final image. If you prefer to capture photos hands-free, turn on gesture detection and raise your palm to start an automated five-second countdown.
+        </p>
+        
+        <div class="landing-info-list">
+          <div class="info-item">
+            <h3 class="info-item-title">Ten photo styles</h3>
+            <p class="info-item-desc">Instantly shift mood with styles like black & white, vintage, warm sepia, cinematic, or HDR.</p>
+          </div>
+          <div class="info-item">
+            <h3 class="info-item-title">Manual filter controls</h3>
+            <p class="info-item-desc">Fine-tune exposure, saturation, vignette, sharpness, tint, fade, and shadows with clean sliders.</p>
+          </div>
+          <div class="info-item">
+            <h3 class="info-item-title">Hands-free gesture capture</h3>
+            <p class="info-item-desc">Show your open hand to the camera to trigger the automated countdown. Once the timer starts, you can lower your hand and get ready for the shot.</p>
+          </div>
+        </div>
+
+        <div class="landing-action">
+          <button id="btn-start-booth" class="btn btn-primary">Open Photo Booth</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. PIN Lock Screen -->
+  <section id="screen-pin" class="screen">
+    <div class="pin-container">
+      <h2 class="pin-title">Enter security PIN</h2>
+      <p class="pin-subtitle">To proceed, please type the six-digit PIN code.</p>
+      
+      <!-- PIN Indicators -->
+      <div class="pin-dots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+      
+      <div id="pin-error-msg" class="pin-error">Incorrect PIN. Please try again.</div>
+      
+      <!-- Numpad Grid -->
+      <div class="numpad">
+        <button class="numpad-btn" data-val="1">1</button>
+        <button class="numpad-btn" data-val="2">2</button>
+        <button class="numpad-btn" data-val="3">3</button>
+        <button class="numpad-btn" data-val="4">4</button>
+        <button class="numpad-btn" data-val="5">5</button>
+        <button class="numpad-btn" data-val="6">6</button>
+        <button class="numpad-btn" data-val="7">7</button>
+        <button class="numpad-btn" data-val="8">8</button>
+        <button class="numpad-btn" data-val="9">9</button>
+        <button class="numpad-btn text-sm" id="numpad-clear">Clear</button>
+        <button class="numpad-btn" data-val="0">0</button>
+        <button class="numpad-btn text-sm" id="numpad-backspace">⌫</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Photo Booth Interface (Camera Screen) -->
+  <section id="screen-booth" class="screen">
+    <div class="booth-layout">
+      
+      <!-- Left side: Camera Viewport -->
+      <div class="viewport-area">
+        <div class="viewport-header">
+          <div class="gesture-indicator-status" id="gesture-status">
+            <span class="status-dot"></span>
+            <span class="status-text">Palm Detection: Off</span>
+          </div>
+          <div class="viewport-device-info" id="device-info">Initializing Camera...</div>
+        </div>
+
+        <div class="video-container" id="video-container">
+          <!-- Video Element (Hidden or visible, styled) -->
+          <video id="webcam" autoplay playsinline muted></video>
+          
+          <!-- Effect Filters Canvas / Overlay -->
+          <canvas id="preview-canvas" style="display: none;"></canvas>
+          
+          <!-- Shutter Flash Overlay -->
+          <div id="shutter-flash" class="shutter-flash"></div>
+          
+          <!-- Vignette CSS Overlay -->
+          <div id="vignette-overlay" class="vignette-overlay"></div>
+          
+          <!-- Grain CSS Overlay -->
+          <div id="grain-overlay" class="grain-overlay"></div>
+          
+          <!-- Hand Sign Countdown Overlay -->
+          <div id="countdown-overlay" class="countdown-overlay">
+            <svg class="countdown-svg" viewBox="0 0 100 100">
+              <circle class="countdown-circle-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="countdown-circle" id="countdown-circle" cx="50" cy="50" r="45"></circle>
+            </svg>
+            <div class="countdown-number" id="countdown-number">5</div>
+          </div>
+          
+          <!-- Feedback message overlay (e.g. Keep hand raised) -->
+          <div id="feedback-alert" class="feedback-alert">Taking photo in 5 seconds. Get ready.</div>
+        </div>
+
+        <!-- Camera Actions Bar -->
+        <div class="camera-actions">
+          <button id="btn-toggle-gesture" class="btn btn-secondary flex-center" title="Toggle Gesture Capture">
+            <span class="btn-label">Hand Capture</span>
+          </button>
+          
+          <!-- Big Shutter Button -->
+          <button id="btn-capture" class="btn-shutter" title="Capture Photo">
+            <div class="shutter-inner"></div>
+          </button>
+          
+          <button id="btn-switch-camera" class="btn btn-secondary flex-center" title="Switch Camera">
+            <span class="btn-label">Switch Camera</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right side: Panel Controls (Styles & Filters) -->
+      <div class="controls-area">
+        <div class="panel-section">
+          <h2 class="panel-title">Visual Styles</h2>
+          <div class="styles-grid" id="styles-grid">
+            <!-- Dynamically populated, or hardcoded -->
+            <button class="style-card active" data-style="original">
+              <span class="style-name">Original</span>
+            </button>
+            <button class="style-card" data-style="bw">
+              <span class="style-name">Black & White</span>
+            </button>
+            <button class="style-card" data-style="vintage">
+              <span class="style-name">Vintage</span>
+            </button>
+            <button class="style-card" data-style="warm">
+              <span class="style-name">Warm</span>
+            </button>
+            <button class="style-card" data-style="cool">
+              <span class="style-name">Cool</span>
+            </button>
+            <button class="style-card" data-style="sepia">
+              <span class="style-name">Sepia</span>
+            </button>
+            <button class="style-card" data-style="cinematic">
+              <span class="style-name">Cinematic</span>
+            </button>
+            <button class="style-card" data-style="softglow">
+              <span class="style-name">Soft Glow</span>
+            </button>
+            <button class="style-card" data-style="hdr">
+              <span class="style-name">HDR</span>
+            </button>
+            <button class="style-card" data-style="highcontrast">
+              <span class="style-name">High Contrast</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="filter-header">
+            <h2 class="panel-title">Manual Filters</h2>
+            <button id="btn-reset-filters" class="btn-text">Reset</button>
+          </div>
+          
+          <div class="sliders-list">
+            <!-- 14 sliders -->
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Brightness</span>
+                <span class="slider-value" id="val-brightness">100%</span>
+              </div>
+              <input type="range" id="slider-brightness" min="50" max="150" value="100" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Contrast</span>
+                <span class="slider-value" id="val-contrast">100%</span>
+              </div>
+              <input type="range" id="slider-contrast" min="50" max="150" value="100" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Saturation</span>
+                <span class="slider-value" id="val-saturation">100%</span>
+              </div>
+              <input type="range" id="slider-saturation" min="0" max="200" value="100" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Exposure</span>
+                <span class="slider-value" id="val-exposure">0</span>
+              </div>
+              <input type="range" id="slider-exposure" min="-100" max="100" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Sharpness</span>
+                <span class="slider-value" id="val-sharpness">0%</span>
+              </div>
+              <input type="range" id="slider-sharpness" min="0" max="100" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Blur</span>
+                <span class="slider-value" id="val-blur">0px</span>
+              </div>
+              <input type="range" id="slider-blur" min="0" max="10" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Vibrance</span>
+                <span class="slider-value" id="val-vibrance">100%</span>
+              </div>
+              <input type="range" id="slider-vibrance" min="50" max="150" value="100" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Temperature</span>
+                <span class="slider-value" id="val-temperature">0</span>
+              </div>
+              <input type="range" id="slider-temperature" min="-100" max="100" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Tint</span>
+                <span class="slider-value" id="val-tint">0</span>
+              </div>
+              <input type="range" id="slider-tint" min="-100" max="100" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Vignette</span>
+                <span class="slider-value" id="val-vignette">0%</span>
+              </div>
+              <input type="range" id="slider-vignette" min="0" max="100" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Grain</span>
+                <span class="slider-value" id="val-grain">0%</span>
+              </div>
+              <input type="range" id="slider-grain" min="0" max="100" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Shadow</span>
+                <span class="slider-value" id="val-shadow">0</span>
+              </div>
+              <input type="range" id="slider-shadow" min="-50" max="50" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Highlight</span>
+                <span class="slider-value" id="val-highlight">0</span>
+              </div>
+              <input type="range" id="slider-highlight" min="-50" max="50" value="0" class="filter-slider">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <span class="slider-label">Fade</span>
+                <span class="slider-value" id="val-fade">0%</span>
+              </div>
+              <input type="range" id="slider-fade" min="0" max="100" value="0" class="filter-slider">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 4. Photo Preview Screen (Post-capture) -->
+  <section id="screen-preview" class="screen">
+    <div class="preview-layout">
+      
+      <!-- Left side: Visual photo result -->
+      <div class="preview-image-area">
+        <div class="viewport-header">
+          <span class="app-badge">Captured Photo</span>
+          <span class="viewport-device-info">Review and tweak settings</span>
+        </div>
+        
+        <div class="captured-container">
+          <canvas id="save-canvas"></canvas>
+          <div id="preview-vignette-overlay" class="vignette-overlay"></div>
+          <div id="preview-grain-overlay" class="grain-overlay"></div>
+        </div>
+
+        <div class="preview-actions">
+          <button id="btn-retake" class="btn btn-secondary">Retake Photo</button>
+          <button id="btn-save" class="btn btn-primary">Save Image</button>
+        </div>
+      </div>
+
+      <!-- Right side: Custom filters available on preview as well -->
+      <div class="preview-controls-area">
+        <div class="panel-section">
+          <div class="filter-header">
+            <h2 class="panel-title">Tweak Settings Before Saving</h2>
+            <button id="btn-preview-reset-filters" class="btn-text">Reset</button>
+          </div>
+          
+          <div class="sliders-list" id="preview-sliders-container">
+            <!-- Handled reactively in JavaScript syncing values with camera sliders -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Canvas for MediaPipe frames processing (hidden) -->
+  <canvas id="mediapipe-canvas" style="display: none;"></canvas>
+
+  <!-- Main JavaScript File -->
+  <script src="app.js"></script>
+</body>
+</html>
