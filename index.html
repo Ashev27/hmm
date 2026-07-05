@@ -14,6 +14,9 @@
   <!-- MediaPipe Hands CDN scripts for Hand Sign Capture -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  
+  <!-- PeerJS CDN for P2P connection signaling -->
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
 
@@ -22,31 +25,37 @@
     <div class="landing-container">
       <header class="app-header">
         <span class="app-badge">Ashly Booth</span>
-        <h1 class="landing-title">Take photos in your browser.</h1>
+        <h1 class="landing-title">Online split-screen photos.</h1>
       </header>
       
       <div class="landing-content">
         <p class="landing-description">
-          This photo booth lets you snap pictures using your computer or phone camera. You can choose from ten visual styles, manually adjust parameters like brightness and grain, and download your final image. If you prefer to capture photos hands-free, turn on gesture detection and raise your palm to start an automated five-second countdown.
+          Take photos online together with a friend, side-by-side. Open a room, share the link, and connect your webcams instantly. Choose from ten visual styles, manually adjust exposure or noise, and trigger the camera hands-free by showing an open palm. Once captured, download your joint photo strip.
         </p>
         
         <div class="landing-info-list">
           <div class="info-item">
-            <h3 class="info-item-title">Ten photo styles</h3>
-            <p class="info-item-desc">Instantly shift mood with styles like black & white, vintage, warm sepia, cinematic, or HDR.</p>
+            <h3 class="info-item-title">Split-screen live cameras</h3>
+            <p class="info-item-desc">See your friend and yourself in a split grid. Save the merged image at full resolution.</p>
           </div>
           <div class="info-item">
-            <h3 class="info-item-title">Manual filter controls</h3>
-            <p class="info-item-desc">Fine-tune exposure, saturation, vignette, sharpness, tint, fade, and shadows with clean sliders.</p>
+            <h3 class="info-item-title">Real-time styling presets</h3>
+            <p class="info-item-desc">Shift the photo mood with presets like cinematic, vintage sepia, soft glow, warm light, or black & white.</p>
           </div>
           <div class="info-item">
-            <h3 class="info-item-title">Hands-free gesture capture</h3>
-            <p class="info-item-desc">Show your open hand to the camera to trigger the automated countdown. Once the timer starts, you can lower your hand and get ready for the shot.</p>
+            <h3 class="info-item-title">Hands-free gesture start</h3>
+            <p class="info-item-desc">Show your open hand to trigger a five-second countdown. You can lower your hand immediately to pose.</p>
           </div>
         </div>
 
         <div class="landing-action">
-          <button id="btn-start-booth" class="btn btn-primary">Open Photo Booth</button>
+          <div class="room-options">
+            <button id="btn-create-room" class="btn btn-primary">Create Photo Room</button>
+            <div class="join-box">
+              <input type="text" id="input-room-code" placeholder="Enter Room Code" class="form-input">
+              <button id="btn-join-room" class="btn btn-secondary">Join Room</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -92,21 +101,48 @@
   <section id="screen-booth" class="screen">
     <div class="booth-layout">
       
-      <!-- Left side: Camera Viewport -->
+      <!-- Left side: Split Viewport Area -->
       <div class="viewport-area">
         <div class="viewport-header">
           <div class="gesture-indicator-status" id="gesture-status">
             <span class="status-dot"></span>
             <span class="status-text">Palm Detection: Off</span>
           </div>
-          <div class="viewport-device-info" id="device-info">Initializing Camera...</div>
+          <div class="room-status-badge" id="room-status-badge">Connecting peer...</div>
         </div>
 
         <div class="video-container" id="video-container">
-          <!-- Video Element (Hidden or visible, styled) -->
-          <video id="webcam" autoplay playsinline muted></video>
           
-          <!-- Effect Filters Canvas / Overlay -->
+          <!-- Split Grid: Two Camera Panels -->
+          <div class="split-grid">
+            <!-- Local Viewport -->
+            <div class="camera-panel" id="local-panel">
+              <video id="webcam" autoplay playsinline muted></video>
+              <div class="name-badge" id="badge-local">You</div>
+            </div>
+
+            <!-- Remote Viewport -->
+            <div class="camera-panel" id="remote-panel">
+              <!-- Video for Friend -->
+              <video id="webcam-remote" autoplay playsinline></video>
+              <div class="name-badge" id="badge-remote">Friend</div>
+              
+              <!-- Waiting Panel Overlay -->
+              <div class="waiting-overlay" id="waiting-overlay">
+                <div class="waiting-box">
+                  <p class="waiting-title">Waiting for your friend</p>
+                  <p class="waiting-desc">Share this link to invite them to the split photo booth:</p>
+                  <div class="share-widget">
+                    <input type="text" id="share-link-input" readonly value="">
+                    <button id="btn-copy-link" class="btn btn-primary text-sm">Copy Link</button>
+                  </div>
+                  <p class="waiting-or-code">Or give them Room Code: <strong id="room-code-display">...</strong></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Shared Effects Canvas Overlay (Hidden) -->
           <canvas id="preview-canvas" style="display: none;"></canvas>
           
           <!-- Shutter Flash Overlay -->
@@ -127,7 +163,7 @@
             <div class="countdown-number" id="countdown-number">5</div>
           </div>
           
-          <!-- Feedback message overlay (e.g. Keep hand raised) -->
+          <!-- Feedback message overlay (e.g. Taking photo in 5s) -->
           <div id="feedback-alert" class="feedback-alert">Taking photo in 5 seconds. Get ready.</div>
         </div>
 
@@ -151,9 +187,13 @@
       <!-- Right side: Panel Controls (Styles & Filters) -->
       <div class="controls-area">
         <div class="panel-section">
+          <h2 class="panel-title">Your Nickname</h2>
+          <input type="text" id="input-local-name" class="form-input" placeholder="Type your name..." value="You">
+        </div>
+
+        <div class="panel-section">
           <h2 class="panel-title">Visual Styles</h2>
           <div class="styles-grid" id="styles-grid">
-            <!-- Dynamically populated, or hardcoded -->
             <button class="style-card active" data-style="original">
               <span class="style-name">Original</span>
             </button>
@@ -321,7 +361,7 @@
       <div class="preview-image-area">
         <div class="viewport-header">
           <span class="app-badge">Captured Photo</span>
-          <span class="viewport-device-info">Review and tweak settings</span>
+          <span class="viewport-device-info">Save your joint split photo</span>
         </div>
         
         <div class="captured-container">
@@ -345,7 +385,7 @@
           </div>
           
           <div class="sliders-list" id="preview-sliders-container">
-            <!-- Handled reactively in JavaScript syncing values with camera sliders -->
+            <!-- Handled reactively in JavaScript -->
           </div>
         </div>
       </div>
