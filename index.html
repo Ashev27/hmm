@@ -113,34 +113,120 @@
 
         <div class="video-container" id="video-container">
           
-          <!-- Split Grid: Two Camera Panels -->
-          <div class="split-grid">
-            <!-- Local Viewport -->
-            <div class="camera-panel" id="local-panel">
-              <video id="webcam" autoplay playsinline muted></video>
-              <div class="name-badge" id="badge-local">You</div>
-            </div>
-
-            <!-- Remote Viewport -->
-            <div class="camera-panel" id="remote-panel">
-              <!-- Video for Friend -->
-              <video id="webcam-remote" autoplay playsinline></video>
-              <div class="name-badge" id="badge-remote">Friend</div>
+          <!-- Film Strip Live View -->
+          <div class="film-strip-live frame-black" id="film-strip-live">
+            
+            <!-- Row 1 -->
+            <div class="strip-row active" data-row="0">
+              <div class="sprocket left"></div>
+              <div class="row-num left">1</div>
               
-              <!-- Waiting Panel Overlay -->
-              <div class="waiting-overlay" id="waiting-overlay">
-                <div class="waiting-box">
-                  <p class="waiting-title">Waiting for your friend</p>
-                  <p class="waiting-desc">Share this link to invite them to the split photo booth:</p>
-                  <div class="share-widget">
-                    <input type="text" id="share-link-input" readonly value="">
-                    <button id="btn-copy-link" class="btn btn-primary text-sm">Copy Link</button>
-                  </div>
-                  <p class="waiting-or-code">Or give them Room Code: <strong id="room-code-display">...</strong></p>
+              <div class="row-content">
+                <!-- Local Column -->
+                <div class="camera-panel" id="local-panel-0">
+                  <video id="webcam-0" class="live-local" autoplay playsinline muted></video>
+                  <canvas id="frozen-local-0" class="frozen-local" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-local-live">You</div>
+                </div>
+                <!-- Remote Column -->
+                <div class="camera-panel" id="remote-panel-0">
+                  <video id="webcam-remote-0" class="live-remote" autoplay playsinline></video>
+                  <canvas id="frozen-remote-0" class="frozen-remote" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-remote-live">Friend</div>
                 </div>
               </div>
+              
+              <div class="row-num right">40</div>
+              <div class="sprocket right"></div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="strip-row" data-row="1">
+              <div class="sprocket left"></div>
+              <div class="row-num left">2</div>
+              
+              <div class="row-content">
+                <!-- Local Column -->
+                <div class="camera-panel" id="local-panel-1">
+                  <video id="webcam-1" class="live-local" autoplay playsinline muted></video>
+                  <canvas id="frozen-local-1" class="frozen-local" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-local-live">You</div>
+                </div>
+                <!-- Remote Column -->
+                <div class="camera-panel" id="remote-panel-1">
+                  <video id="webcam-remote-1" class="live-remote" autoplay playsinline></video>
+                  <canvas id="frozen-remote-1" class="frozen-remote" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-remote-live">Friend</div>
+                </div>
+              </div>
+              
+              <div class="row-num right">neo photo</div>
+              <div class="sprocket right"></div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="strip-row" data-row="2">
+              <div class="sprocket left"></div>
+              <div class="row-num left">3</div>
+              
+              <div class="row-content">
+                <!-- Local Column -->
+                <div class="camera-panel" id="local-panel-2">
+                  <video id="webcam-2" class="live-local" autoplay playsinline muted></video>
+                  <canvas id="frozen-local-2" class="frozen-local" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-local-live">You</div>
+                </div>
+                <!-- Remote Column -->
+                <div class="camera-panel" id="remote-panel-2">
+                  <video id="webcam-remote-2" class="live-remote" autoplay playsinline></video>
+                  <canvas id="frozen-remote-2" class="frozen-remote" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-remote-live">Friend</div>
+                </div>
+              </div>
+              
+              <div class="row-num right">41</div>
+              <div class="sprocket right"></div>
+            </div>
+            
+          </div>
+          
+          <!-- Shared Effects Canvas Overlay (Hidden) -->
+          <canvas id="preview-canvas" style="display: none;"></canvas>
+          
+          <!-- Shutter Flash Overlay -->
+          <div id="shutter-flash" class="shutter-flash"></div>
+          
+          <!-- Vignette CSS Overlay -->
+          <div id="vignette-overlay" class="vignette-overlay"></div>
+          
+          <!-- Grain CSS Overlay -->
+          <div id="grain-overlay" class="grain-overlay"></div>
+          
+          <!-- Hand Sign Countdown Overlay -->
+          <div id="countdown-overlay" class="countdown-overlay">
+            <svg class="countdown-svg" viewBox="0 0 100 100">
+              <circle class="countdown-circle-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="countdown-circle" id="countdown-circle" cx="50" cy="50" r="45"></circle>
+            </svg>
+            <div class="countdown-number" id="countdown-number">5</div>
+          </div>
+          
+          <!-- Feedback message overlay (e.g. Taking photo in 5s) -->
+          <div id="feedback-alert" class="feedback-alert">Taking photo in 5 seconds. Get ready.</div>
+          
+          <!-- Waiting Panel Overlay -->
+          <div class="waiting-overlay" id="waiting-overlay">
+            <div class="waiting-box">
+              <p class="waiting-title">Waiting for your friend</p>
+              <p class="waiting-desc">Share this link to invite them to the split photo booth:</p>
+              <div class="share-widget">
+                <input type="text" id="share-link-input" readonly value="">
+                <button id="btn-copy-link" class="btn btn-primary text-sm">Copy Link</button>
+              </div>
+              <p class="waiting-or-code">Or give them Room Code: <strong id="room-code-display">...</strong></p>
             </div>
           </div>
+        </div>
           
           <!-- Shared Effects Canvas Overlay (Hidden) -->
           <canvas id="preview-canvas" style="display: none;"></canvas>
@@ -189,6 +275,26 @@
         <div class="panel-section">
           <h2 class="panel-title">Your Nickname</h2>
           <input type="text" id="input-local-name" class="form-input" placeholder="Type your name..." value="You">
+        </div>
+
+        <div class="panel-section">
+          <h2 class="panel-title">Strip Settings</h2>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="control-label" style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Frame Design</label>
+            <select id="select-frame-style" class="form-input" style="padding: 0.6rem 0.8rem; background-color: var(--panel-bg);">
+              <option value="black">Classic Black Film</option>
+              <option value="white">Minimal White</option>
+              <option value="pink">Pastel Pink</option>
+              <option value="kraft">Retro Kraft Card</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+            <label class="control-label" style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Layout Style</label>
+            <select id="select-strip-layout" class="form-input" style="padding: 0.6rem 0.8rem; background-color: var(--panel-bg);">
+              <option value="double">Double Strip (Share with Friend)</option>
+              <option value="single">Single Strip</option>
+            </select>
+          </div>
         </div>
 
         <div class="panel-section">
@@ -378,6 +484,33 @@
 
       <!-- Right side: Custom filters available on preview as well -->
       <div class="preview-controls-area">
+        
+        <div class="panel-section">
+          <h2 class="panel-title">Select Photo to Edit</h2>
+          <div class="edit-photo-selector" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.35rem;">
+            <button class="style-card active" id="btn-edit-photo-0" data-index="0" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 1</button>
+            <button class="style-card" id="btn-edit-photo-1" data-index="1" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 2</button>
+            <button class="style-card" id="btn-edit-photo-2" data-index="2" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 3</button>
+            <button class="style-card" id="btn-edit-photo-all" data-index="all" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">All</button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h2 class="panel-title">Photo Filters</h2>
+          <div class="styles-grid" id="preview-styles-grid">
+            <button class="style-card active" data-preview-style="original">Original</button>
+            <button class="style-card" data-preview-style="bw">B &amp; W</button>
+            <button class="style-card" data-preview-style="vintage">Vintage</button>
+            <button class="style-card" data-preview-style="warm">Warm</button>
+            <button class="style-card" data-preview-style="cool">Cool</button>
+            <button class="style-card" data-preview-style="sepia">Sepia</button>
+            <button class="style-card" data-preview-style="cinematic">Cinematic</button>
+            <button class="style-card" data-preview-style="softglow">Soft Glow</button>
+            <button class="style-card" data-preview-style="hdr">HDR</button>
+            <button class="style-card" data-preview-style="highcontrast">High Contrast</button>
+          </div>
+        </div>
+
         <div class="panel-section">
           <div class="filter-header">
             <h2 class="panel-title">Tweak Settings Before Saving</h2>
