@@ -279,6 +279,26 @@ function stopCamera() {
   closeP2PConnection();
 }
 
+function updateCameraVisibility() {
+  const liveStrip = document.getElementById('film-strip-live');
+  if (!liveStrip) return;
+  
+  if (state.remoteStream) {
+    liveStrip.classList.remove('single-user');
+  } else {
+    liveStrip.classList.add('single-user');
+  }
+
+  const remotePanels = document.querySelectorAll('[id^="remote-panel-"]');
+  remotePanels.forEach(panel => {
+    if (state.remoteStream) {
+      panel.style.display = "block";
+    } else {
+      panel.style.display = "none";
+    }
+  });
+}
+
 async function getCameras() {
   try {
     const allDevices = await navigator.mediaDevices.enumerateDevices();
