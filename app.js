@@ -182,6 +182,16 @@ window.addEventListener('DOMContentLoaded', () => {
       row.style.display = 'none';
     }
   });
+
+  // Handle skip waiting button click (Capture Alone)
+  const btnSkip = document.getElementById('btn-skip-waiting');
+  if (btnSkip) {
+    btnSkip.addEventListener('click', () => {
+      waitingOverlay.style.display = 'none';
+      state.remoteStream = null;
+      updateCameraVisibility();
+    });
+  }
 });
 
 // Landing Actions
@@ -304,12 +314,25 @@ function initiateP2PConnection() {
   shareLinkInput.value = shareURL;
   roomCodeDisplay.textContent = state.roomCode;
 
+  const peerConfig = {
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    secure: true,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    }
+  };
+
   if (state.isHost) {
     // 1. HOST MODE
     waitingOverlay.style.display = 'flex';
 
     // Register as host-roomCode
-    state.peer = new Peer('ashly-booth-host-' + state.roomCode);
+    state.peer = new Peer('ashly-booth-host-' + state.roomCode, peerConfig);
 
     state.peer.on('open', (id) => {
       roomStatusBadge.textContent = `Room ${state.roomCode}: Open`;
@@ -345,7 +368,7 @@ function initiateP2PConnection() {
 
     // Register with unique client ID
     const clientID = 'ashly-booth-client-' + Math.random().toString(36).substring(2, 9);
-    state.peer = new Peer(clientID);
+    state.peer = new Peer(clientID, peerConfig);
 
     state.peer.on('open', (id) => {
       roomStatusBadge.textContent = "Connecting to Host...";
@@ -379,7 +402,13 @@ function initiateP2PConnection() {
       alert("The requested photo room could not be found. Make sure the host is online.");
       showScreen('landing');
     } else {
-      roomStatusBadge.textContent = "Network Error";
+      roomStatusBadge.textContent = "Offline Mode";
+      // Allow capturing alone if signaling fails
+      if (state.isHost) {
+        waitingOverlay.style.display = 'none';
+        state.remoteStream = null;
+        updateCameraVisibility();
+      }
     }
   });
 }
