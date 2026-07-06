@@ -51,7 +51,7 @@ const state = {
   totalSteps: 3,
 
   // Gesture capture (MediaPipe)
-  gestureEnabled: false,
+  gestureEnabled: true,
   handsDetector: null,
   isCountingDown: false,
   countdownTime: 5,
