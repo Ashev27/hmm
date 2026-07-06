@@ -338,7 +338,7 @@ async function startCamera() {
   } catch (err) {
     console.error("Camera access error:", err);
     roomStatusBadge.textContent = "Camera Error";
-    alert("Could not access your camera. Please verify permission settings.");
+    alert(`Could not access your camera (${err.name}: ${err.message}).\n\nCommon solutions:\n1. Click the site settings icon to the left of the URL bar and allow "Camera".\n2. Close any other applications (like OBS, Zoom, or another tab) that might be using the camera.`);
   }
 }
 
@@ -359,7 +359,7 @@ function stopCamera() {
 async function getCameras() {
   try {
     const allDevices = await navigator.mediaDevices.enumerateDevices();
-    state.devices = allDevices.filter(d => d.kind === 'videoinput');
+    state.devices = allDevices.filter(d => d.kind === 'videoinput' && d.deviceId);
   } catch (err) {
     console.error("Error enumerating cameras:", err);
   }
