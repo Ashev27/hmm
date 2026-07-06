@@ -395,7 +395,27 @@ p {
 }
 
 /* Live Stream Container */
-.video-container, .captured-container {
+.video-container {
+  position: relative;
+  flex-grow: 1;
+  width: 100%;
+  background-color: #000000;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1.5rem 0;
+  scrollbar-width: none;
+}
+
+.video-container::-webkit-scrollbar {
+  display: none;
+}
+
+.captured-container {
   position: relative;
   flex-grow: 1;
   width: 100%;
@@ -474,12 +494,13 @@ p {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #121212;
+  background-color: rgba(18, 18, 18, 0.65);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--spacing-md);
-  z-index: 4;
+  z-index: 100;
 }
 
 .waiting-box {
@@ -913,6 +934,21 @@ p {
   font-style: italic;
 }
 
+.film-strip-live.frame-fuji {
+  background-color: #18181b;
+  color: #f4f4f5;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.65);
+  border-left: 4px solid #008543;
+  border-right: 4px solid #008543;
+}
+.film-strip-live.frame-fuji .sprocket {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.8);
+}
+.film-strip-live.frame-fuji .row-num {
+  color: rgba(255, 255, 255, 0.45);
+}
+
 /* Rows styling */
 .strip-row {
   display: flex;
@@ -981,6 +1017,9 @@ p {
 .strip-row[data-row="0"] .row-content::after { content: "PHOTO 1"; }
 .strip-row[data-row="1"] .row-content::after { content: "PHOTO 2"; }
 .strip-row[data-row="2"] .row-content::after { content: "PHOTO 3"; }
+.strip-row[data-row="3"] .row-content::after { content: "PHOTO 4"; }
+.strip-row[data-row="4"] .row-content::after { content: "PHOTO 5"; }
+.strip-row[data-row="5"] .row-content::after { content: "PHOTO 6"; }
 
 /* Live Video panels in Row Content */
 .row-content .camera-panel {
@@ -1050,5 +1089,17 @@ p {
   .styles-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* Single User layout adjustments */
+.film-strip-live.single-user .live-remote,
+.film-strip-live.single-user .frozen-remote,
+.film-strip-live.single-user .badge-remote-live {
+  display: none !important;
+}
+
+.film-strip-live.single-user .row-content {
+  grid-template-columns: 1fr;
+  aspect-ratio: 1.33 / 1; /* 4:3 aspect ratio for single user camera frame */
 }
 
