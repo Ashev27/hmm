@@ -1048,9 +1048,14 @@ function updateLiveFilters() {
 
   const filterString = getCSSFilterString(state.selectedStyle, state.filters);
   
-  // Apply visual styling to BOTH video panels (left and right split panels)
-  videoElement.style.filter = filterString;
-  videoElementRemote.style.filter = filterString;
+  // Apply visual styling to the ACTIVE video row panels (both local and remote)
+  const activeStep = state.currentCaptureStep;
+  if (activeStep >= 0 && activeStep < 3) {
+    const videoLocal = liveLocalVideos[activeStep];
+    const videoRemote = liveRemoteVideos[activeStep];
+    if (videoLocal) videoLocal.style.filter = filterString;
+    if (videoRemote) videoRemote.style.filter = filterString;
+  }
 
   // Temperature Overlay
   const tempOverlay = document.getElementById('temp-overlay') || createOverlay('temp-overlay', 2);
