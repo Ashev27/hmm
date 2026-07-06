@@ -1070,15 +1070,52 @@ p {
 @media (max-width: 1023px) {
   .viewport-area, .preview-image-area {
     min-height: auto;
+    height: 62vh; /* Set a dedicated height for the active camera on mobile screen */
   }
   
   .video-container, .captured-container {
     aspect-ratio: auto;
-    min-height: 480px;
-    flex-grow: 0;
-    padding: var(--spacing-xs);
+    height: 100%;
+    flex-grow: 1;
+    padding: 0;
+    border: none;
+    border-radius: 0;
   }
   
+  /* On mobile camera screen, only show the ACTIVE row expanded to fill container */
+  .film-strip-live {
+    padding: 0 !important;
+    gap: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .film-strip-live .strip-row:not(.active) {
+    display: none !important;
+  }
+  
+  .film-strip-live .strip-row.active {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  .film-strip-live .strip-row.active .sprocket,
+  .film-strip-live .strip-row.active .row-num {
+    display: none !important;
+  }
+  
+  .film-strip-live .strip-row.active .row-content {
+    border: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    border-radius: 0 !important;
+  }
+
   .controls-area, .preview-controls-area {
     max-height: none;
     border-left: none;
