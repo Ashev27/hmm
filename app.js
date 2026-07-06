@@ -8,13 +8,13 @@ const state = {
   pinCode: "122724",
   enteredPin: "",
   postPinAction: null, // Callback to run after PIN validates successfully
-  
+
   // Camera & Stream
   currentStream: null,
   devices: [],
   currentDeviceIndex: 0,
   isCameraReady: false,
-  
+
   // Filter settings for active capturing row
   selectedStyle: "original",
   filters: {
@@ -33,7 +33,7 @@ const state = {
     highlight: 0,    // -50 - 50
     fade: 0          // 0 - 100
   },
-  
+
   // Sequential capture state
   currentCaptureStep: 0, // 0 (Row 1), 1 (Row 2), 2 (Row 3), etc.
   capturedPhotos: [null, null, null, null, null, null], // Stores raw canvases
@@ -48,7 +48,7 @@ const state = {
   activeEditIndex: 0, // 0, 1, 2, 3, 4, 5, or "all"
   frameStyle: "black", // "black", "white", "pink", "kraft", "fuji"
   stripLayout: "double", // "double", "single"
-  
+
   // Gesture capture (MediaPipe)
   gestureEnabled: false,
   handsDetector: null,
@@ -56,7 +56,7 @@ const state = {
   countdownTime: 5,
   countdownInterval: null,
   lastHandDetectedTime: 0,
-  
+
   // Online Multi-User (WebRTC PeerJS)
   peer: null,
   peerConnection: null, // Data channel
@@ -136,8 +136,8 @@ const remoteNameBadges = document.querySelectorAll('.badge-remote-live');
 let audioCtx = null;
 
 /* ==========================================================================
-   1. NAVIGATION & INITIALIZATION
-   ========================================================================== */
+  1. NAVIGATION & INITIALIZATION
+  ========================================================================== */
 function showScreen(screenId) {
   Object.keys(screens).forEach(key => {
     if (key === screenId) {
@@ -194,8 +194,8 @@ document.getElementById('btn-join-room').addEventListener('click', () => {
 });
 
 /* ==========================================================================
-   2. PIN LOCK SECURITY
-   ========================================================================== */
+  2. PIN LOCK SECURITY
+  ========================================================================== */
 const pinDots = document.querySelectorAll('.pin-dot');
 const pinErrorMsg = document.getElementById('pin-error-msg');
 
@@ -263,7 +263,7 @@ document.getElementById('numpad-backspace').addEventListener('click', () => {
 // Keyboard mapping for PIN
 window.addEventListener('keydown', (e) => {
   if (!screens.pin.classList.contains('active')) return;
-  
+
   if (e.key >= '0' && e.key <= '9') {
     if (state.enteredPin.length < 6) {
       state.enteredPin += e.key;
@@ -288,21 +288,21 @@ window.addEventListener('keydown', (e) => {
 // Inject Shake keyframes dynamically
 const pinAnim = document.createElement('style');
 pinAnim.innerHTML = `
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-8px); }
-  40%, 80% { transform: translateX(8px); }
-}
-`;
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
+  `;
 document.head.appendChild(pinAnim);
 
 /* ==========================================================================
-   3. WEBCAM MANAGEMENT
-   ========================================================================== */
+  3. WEBCAM MANAGEMENT
+  ========================================================================== */
 async function startCamera() {
   stopCamera();
   roomStatusBadge.textContent = "Setting camera...";
-  
+
   try {
     const constraints = {
       video: {
@@ -321,12 +321,12 @@ async function startCamera() {
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     state.currentStream = stream;
-    
+
     // Bind stream to all 3 local webcam video elements
     liveLocalVideos.forEach(v => {
       if (v) v.srcObject = stream;
     });
-    
+
     state.isCameraReady = true;
 
     if (state.devices.length === 0) {
@@ -383,41 +383,41 @@ document.getElementById('btn-switch-camera').addEventListener('click', async () 
 });
 
 /* ==========================================================================
-   4. WEBRTC P2P MULTIPLAYER SIGNALING (PeerJS)
-   ========================================================================== */
+  4. WEBRTC P2P MULTIPLAYER SIGNALING (PeerJS)
+  ========================================================================== */
 function initiateP2PConnection() {
   closeP2PConnection();
-  
+
   roomStatusBadge.textContent = "Connecting signaling...";
-  
+
   // Format sharing link
   const baseURL = window.location.href.split('#')[0];
   const shareURL = `${baseURL}#room-${state.roomCode}`;
   shareLinkInput.value = shareURL;
   roomCodeDisplay.textContent = state.roomCode;
-  
+
   if (state.isHost) {
     // 1. HOST MODE
     waitingOverlay.style.display = 'flex';
-    
+
     // Register as host-roomCode
     state.peer = new Peer('ashly-booth-host-' + state.roomCode);
-    
+
     state.peer.on('open', (id) => {
       roomStatusBadge.textContent = `Room ${state.roomCode}: Open`;
     });
-    
+
     // Listen for client data connection
     state.peer.on('connection', (conn) => {
       state.peerConnection = conn;
       setupDataChannel();
     });
-    
+
     // Listen for client camera feed call
     state.peer.on('call', (call) => {
       state.peerCall = call;
       call.answer(state.currentStream);
-      
+
       call.on('stream', (stream) => {
         state.remoteStream = stream;
         liveRemoteVideos.forEach(v => {
@@ -426,30 +426,30 @@ function initiateP2PConnection() {
         waitingOverlay.style.display = 'none';
         roomStatusBadge.textContent = "Friend Connected";
       });
-      
+
       call.on('close', handlePeerDisconnect);
     });
-    
+
   } else {
     // 2. CLIENT MODE
     waitingOverlay.style.display = 'none';
-    
+
     // Register with unique client ID
     const clientID = 'ashly-booth-client-' + Math.random().toString(36).substring(2, 9);
     state.peer = new Peer(clientID);
-    
+
     state.peer.on('open', (id) => {
       roomStatusBadge.textContent = "Connecting to Host...";
-      
+
       // Connect data channel to Host
       const conn = state.peer.connect('ashly-booth-host-' + state.roomCode);
       state.peerConnection = conn;
       setupDataChannel();
-      
+
       // Call Host camera feed
       const call = state.peer.call('ashly-booth-host-' + state.roomCode, state.currentStream);
       state.peerCall = call;
-      
+
       call.on('stream', (stream) => {
         state.remoteStream = stream;
         liveRemoteVideos.forEach(v => {
@@ -457,11 +457,11 @@ function initiateP2PConnection() {
         });
         roomStatusBadge.textContent = "Connected to Friend";
       });
-      
+
       call.on('close', handlePeerDisconnect);
     });
   }
-  
+
   state.peer.on('error', (err) => {
     console.error("PeerJS Error:", err);
     if (err.type === 'peer-unavailable') {
@@ -498,49 +498,49 @@ function setupDataChannel() {
   state.peerConnection.on('data', (data) => {
     if (!data || !data.type) return;
 
-    switch(data.type) {
+    switch (data.type) {
       case 'NAME_CHANGE':
         state.remoteName = data.name || "Friend";
         remoteNameBadges.forEach(b => {
           b.textContent = state.remoteName;
         });
         break;
-        
+
       case 'SYNC_FILTERS':
         state.selectedStyle = data.style;
         state.filters = data.filters;
         syncSlidersUI();
         updateLiveFilters();
         break;
-        
+
       case 'SYNC_STRIP_SETTINGS':
         state.frameStyle = data.frameStyle;
         state.stripLayout = data.stripLayout;
-        
+
         // Update selectors UI
         document.getElementById('select-frame-style').value = data.frameStyle;
         document.getElementById('select-strip-layout').value = data.stripLayout;
-        
+
         // Update live view classes
         const liveStrip = document.getElementById('film-strip-live');
         if (liveStrip) {
           liveStrip.className = `film-strip-live frame-${state.frameStyle}`;
         }
         break;
-        
+
       case 'START_COUNTDOWN':
         if (!state.isCountingDown) {
           triggerShutterCountdown(false); // Trigger local run without resending signal
         }
         break;
-        
+
       case 'RESET_BOOTH':
         resetBoothCapture();
         showScreen('booth');
         break;
     }
   });
-  
+
   state.peerConnection.on('close', handlePeerDisconnect);
 }
 
@@ -553,7 +553,7 @@ function handlePeerDisconnect() {
   remoteNameBadges.forEach(b => {
     b.textContent = state.remoteName;
   });
-  
+
   if (state.isHost) {
     waitingOverlay.style.display = 'flex';
     roomStatusBadge.textContent = `Room ${state.roomCode}: Open`;
@@ -605,7 +605,7 @@ document.getElementById('input-local-name').addEventListener('input', (e) => {
   localNameBadges.forEach(b => {
     b.textContent = val;
   });
-  
+
   if (state.peerConnection && state.peerConnection.open) {
     state.peerConnection.send({
       type: 'NAME_CHANGE',
@@ -615,8 +615,8 @@ document.getElementById('input-local-name').addEventListener('input', (e) => {
 });
 
 /* ==========================================================================
-   5. WEB AUDIO SHUTTER SOUND SYNTHESIZER
-   ========================================================================== */
+  5. WEB AUDIO SHUTTER SOUND SYNTHESIZER
+  ========================================================================== */
 function playShutterSound() {
   try {
     if (!audioCtx) {
@@ -629,7 +629,7 @@ function playShutterSound() {
     const bufferSize = audioCtx.sampleRate * 0.15;
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
-    
+
     for (let i = 0; i < bufferSize; i++) {
       data[i] = Math.random() * 2 - 1;
     }
@@ -656,7 +656,7 @@ function playShutterSound() {
     setTimeout(() => {
       const clickSource = audioCtx.createBufferSource();
       clickSource.buffer = buffer;
-      
+
       const clickGain = audioCtx.createGain();
       clickGain.gain.setValueAtTime(0, audioCtx.currentTime);
       clickGain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.003);
@@ -674,8 +674,8 @@ function playShutterSound() {
 }
 
 /* ==========================================================================
-   6. SHUTTER CAPTURE & COLLAGE GENERATION
-   ========================================================================== */
+  6. SHUTTER CAPTURE & COLLAGE GENERATION
+  ========================================================================== */
 function triggerShutterCountdown(shouldSendSignal = true) {
   if (shouldSendSignal && state.peerConnection && state.peerConnection.open) {
     state.peerConnection.send({ type: 'START_COUNTDOWN' });
@@ -696,7 +696,7 @@ function executeShutterCapture() {
   }, 350);
 
   const step = state.currentCaptureStep;
-  if (step < 0 || step >= 3) return;
+  if (step < 0 || step >= 6) return;
 
   // Capture mirrored stream (local) and non-mirrored stream (remote) for the current step
   const rawCanvas = captureRawSplitFrame(step);
@@ -716,7 +716,7 @@ function executeShutterCapture() {
 
   // Sync to next row or complete
   setTimeout(() => {
-    if (state.currentCaptureStep < 3) {
+    if (state.currentCaptureStep < 6) {
       // Deactivate all rows, activate the next one
       stripRows.forEach((row, i) => {
         if (i === state.currentCaptureStep) {
@@ -725,7 +725,7 @@ function executeShutterCapture() {
           row.classList.remove('active');
         }
       });
-      
+
       // Update filters for the next live feed
       updateLiveFilters();
     } else {
@@ -737,10 +737,10 @@ function executeShutterCapture() {
 
 function captureRawSplitFrame(step) {
   const collage = document.createElement('canvas');
-  
+
   const videoLocal = liveLocalVideos[step];
   const videoRemote = liveRemoteVideos[step];
-  
+
   const vWidth = videoLocal.videoWidth || 640;
   const vHeight = videoLocal.videoHeight || 480;
 
@@ -749,14 +749,14 @@ function captureRawSplitFrame(step) {
     collage.width = vWidth * 2;
     collage.height = vHeight;
     const ctx = collage.getContext('2d');
-    
+
     // Draw Local camera on Left Half (mirrored to match live view)
     ctx.save();
     ctx.translate(vWidth, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(videoLocal, 0, 0, vWidth, vHeight);
     ctx.restore();
-    
+
     // Draw Remote camera on Right Half
     ctx.drawImage(videoRemote, vWidth, 0, vWidth, vHeight);
   } else {
@@ -764,14 +764,14 @@ function captureRawSplitFrame(step) {
     collage.width = vWidth;
     collage.height = vHeight;
     const ctx = collage.getContext('2d');
-    
+
     ctx.save();
     ctx.translate(vWidth, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(videoLocal, 0, 0, vWidth, vHeight);
     ctx.restore();
   }
-  
+
   return collage;
 }
 
@@ -823,11 +823,14 @@ function freezeRowUI(step, rawCanvas) {
 
 function resetBoothCapture() {
   state.currentCaptureStep = 0;
-  state.capturedPhotos = [null, null, null];
+  state.capturedPhotos = [null, null, null, null, null, null];
   state.activeEditIndex = 0;
-  
+
   // Reset individual styles to default
   state.photoStyles = [
+    { selectedStyle: "original", filters: { ...defaultFilters } },
+    { selectedStyle: "original", filters: { ...defaultFilters } },
+    { selectedStyle: "original", filters: { ...defaultFilters } },
     { selectedStyle: "original", filters: { ...defaultFilters } },
     { selectedStyle: "original", filters: { ...defaultFilters } },
     { selectedStyle: "original", filters: { ...defaultFilters } }
@@ -850,7 +853,7 @@ function resetBoothCapture() {
   });
 
   // Reset Video / Canvas visibility
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 6; i++) {
     if (liveLocalVideos[i]) {
       liveLocalVideos[i].style.display = 'block';
       liveLocalVideos[i].style.filter = '';
@@ -877,18 +880,18 @@ document.getElementById('btn-capture').addEventListener('click', () => {
 });
 
 /* ==========================================================================
-   7. STYLES & MANUAL FILTERING PIPELINE
-   ========================================================================== */
+  7. STYLES & MANUAL FILTERING PIPELINE
+  ========================================================================== */
 // Frame style selector listener
 document.getElementById('select-frame-style').addEventListener('change', (e) => {
   state.frameStyle = e.target.value;
-  
+
   // Update live view classes to show the selected frame design in real-time
   const liveStrip = document.getElementById('film-strip-live');
   if (liveStrip) {
     liveStrip.className = `film-strip-live frame-${state.frameStyle}`;
   }
-  
+
   // Sync style settings to peer
   if (state.peerConnection && state.peerConnection.open) {
     state.peerConnection.send({
@@ -902,7 +905,7 @@ document.getElementById('select-frame-style').addEventListener('change', (e) => 
 // Strip layout selector listener
 document.getElementById('select-strip-layout').addEventListener('change', (e) => {
   state.stripLayout = e.target.value;
-  
+
   // Sync layout settings to peer
   if (state.peerConnection && state.peerConnection.open) {
     state.peerConnection.send({
@@ -917,10 +920,10 @@ document.querySelectorAll('.style-card[data-style]').forEach(card => {
   card.addEventListener('click', () => {
     document.querySelectorAll('.style-card[data-style]').forEach(c => c.classList.remove('active'));
     card.classList.add('active');
-    
+
     state.selectedStyle = card.getAttribute('data-style');
     updateLiveFilters();
-    
+
     // Broadcast filters to peer
     syncFiltersToPeer();
   });
@@ -930,9 +933,9 @@ document.querySelectorAll('.filter-slider').forEach(slider => {
   slider.addEventListener('input', (e) => {
     const name = e.target.id.replace('slider-', '');
     let val = parseInt(e.target.value);
-    
+
     state.filters[name] = val;
-    
+
     // Update value label
     const labelVal = document.getElementById(`val-${name}`);
     if (name === 'brightness' || name === 'contrast' || name === 'saturation' || name === 'vibrance') {
@@ -944,7 +947,7 @@ document.querySelectorAll('.filter-slider').forEach(slider => {
     } else {
       labelVal.textContent = `${val}%`;
     }
-    
+
     updateLiveFilters();
     syncFiltersToPeer();
   });
@@ -979,7 +982,7 @@ function syncSlidersUI() {
   document.querySelectorAll('.filter-slider').forEach(slider => {
     const name = slider.id.replace('slider-', '');
     slider.value = state.filters[name];
-    
+
     const labelVal = document.getElementById(`val-${name}`);
     let val = state.filters[name];
     if (name === 'brightness' || name === 'contrast' || name === 'saturation' || name === 'vibrance') {
@@ -1001,7 +1004,7 @@ function resetAllSliders() {
 
 function getCSSFilterString(style, filters) {
   let styleFilter = '';
-  switch(style) {
+  switch (style) {
     case 'bw':
       styleFilter = 'grayscale(100%) contrast(110%)';
       break;
@@ -1039,11 +1042,11 @@ function getCSSFilterString(style, filters) {
   const saturationVal = filters.saturation * (filters.vibrance / 100);
 
   const manualFilter = `
-    brightness(${brightnessVal}%)
-    contrast(${filters.contrast}%)
-    saturate(${saturationVal}%)
-    blur(${filters.blur}px)
-  `;
+      brightness(${brightnessVal}%)
+      contrast(${filters.contrast}%)
+      saturate(${saturationVal}%)
+      blur(${filters.blur}px)
+    `;
 
   return `${styleFilter} ${manualFilter}`.trim();
 }
@@ -1052,7 +1055,7 @@ function updateLiveFilters() {
   if (!state.isCameraReady) return;
 
   const filterString = getCSSFilterString(state.selectedStyle, state.filters);
-  
+
   // Apply visual styling to the ACTIVE video row panels (both local and remote)
   const activeStep = state.currentCaptureStep;
   if (activeStep >= 0 && activeStep < 3) {
@@ -1102,7 +1105,7 @@ function updateLiveFilters() {
   if (state.selectedStyle === 'cool') {
     tempOverlay.style.backgroundColor = `rgba(59, 130, 246, 0.08)`;
   }
-  
+
   if (state.selectedStyle === 'softglow') {
     const glowOverlay = document.getElementById('glow-overlay') || createOverlay('glow-overlay', 1);
     glowOverlay.style.backdropFilter = 'blur(1.5px) brightness(1.02)';
@@ -1128,16 +1131,16 @@ function createOverlay(id, zIndex) {
 }
 
 /* ==========================================================================
-   8. CANVAS COLLAGE RENDER PIPELINE
-   ========================================================================== */
+  8. CANVAS COLLAGE RENDER PIPELINE
+  ========================================================================== */
 function drawCoverImage(ctx, img, x, y, w, h) {
   const imgW = img.width;
   const imgH = img.height;
   const imgRatio = imgW / imgH;
   const targetRatio = w / h;
-  
+
   let sx, sy, sw, sh;
-  
+
   if (imgRatio > targetRatio) {
     // Image is wider than target aspect ratio
     sh = imgH;
@@ -1151,25 +1154,25 @@ function drawCoverImage(ctx, img, x, y, w, h) {
     sx = 0;
     sy = (imgH - sh) / 2;
   }
-  
+
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
 function renderPhotoSlot(rawCanvas, photoStyle, stepIndex) {
   const slotW = 600;
   const slotH = 400;
-  
+
   const off = document.createElement('canvas');
   off.width = slotW;
   off.height = slotH;
   const ctx = off.getContext('2d');
-  
+
   // 1. Draw raw canvas with CSS filters applied via ctx.filter
   const cssFilters = getCSSFilterString(photoStyle.selectedStyle, photoStyle.filters);
   ctx.filter = cssFilters;
   drawCoverImage(ctx, rawCanvas, 0, 0, slotW, slotH);
   ctx.filter = 'none';
-  
+
   // 2. Soft Glow filter blend
   if (photoStyle.selectedStyle === 'softglow') {
     ctx.globalAlpha = 0.35;
@@ -1178,18 +1181,18 @@ function renderPhotoSlot(rawCanvas, photoStyle, stepIndex) {
     ctx.filter = 'none';
     ctx.globalAlpha = 1.0;
   }
-  
+
   // 3. Temperature shift overlay
   if (photoStyle.filters.temperature !== 0 || photoStyle.selectedStyle === 'cool') {
     ctx.globalCompositeOperation = 'source-over';
     let tempVal = photoStyle.filters.temperature;
     if (photoStyle.selectedStyle === 'cool') tempVal -= 30;
-    
+
     const opacity = Math.min(0.25, Math.abs(tempVal) / 100 * 0.15);
     ctx.fillStyle = tempVal > 0 ? `rgba(249, 115, 22, ${opacity})` : `rgba(59, 130, 246, ${opacity})`;
     ctx.fillRect(0, 0, slotW, slotH);
   }
-  
+
   // 4. Tint shift overlay
   if (photoStyle.filters.tint !== 0) {
     ctx.globalCompositeOperation = 'source-over';
@@ -1197,7 +1200,7 @@ function renderPhotoSlot(rawCanvas, photoStyle, stepIndex) {
     ctx.fillStyle = photoStyle.filters.tint > 0 ? `rgba(34, 197, 94, ${opacity})` : `rgba(236, 72, 153, ${opacity})`;
     ctx.fillRect(0, 0, slotW, slotH);
   }
-  
+
   // 5. Fade shift overlay
   if (photoStyle.filters.fade > 0) {
     ctx.globalCompositeOperation = 'source-over';
@@ -1205,7 +1208,7 @@ function renderPhotoSlot(rawCanvas, photoStyle, stepIndex) {
     ctx.fillStyle = `rgba(128, 128, 128, ${opacity})`;
     ctx.fillRect(0, 0, slotW, slotH);
   }
-  
+
   // 6. Vignette overlay
   if (photoStyle.filters.vignette > 0) {
     ctx.globalCompositeOperation = 'source-over';
@@ -1219,20 +1222,20 @@ function renderPhotoSlot(rawCanvas, photoStyle, stepIndex) {
     ctx.fillStyle = radialGrad;
     ctx.fillRect(0, 0, slotW, slotH);
   }
-  
+
   // 7. Sharpness filter
   if (photoStyle.filters.sharpness > 0) {
     applySharpnessFilter(ctx, slotW, slotH, photoStyle.filters.sharpness);
   }
-  
+
   // 8. Grain noise filter
   if (photoStyle.filters.grain > 0) {
     applyGrainFilter(ctx, slotW, slotH, photoStyle.filters.grain);
   }
-  
+
   // 9. Draw Nickname Badges directly onto this photo slot
   drawNameBadgesToSlot(ctx, slotW, slotH);
-  
+
   return off;
 }
 
@@ -1240,45 +1243,45 @@ function drawNameBadgesToSlot(ctx, w, h) {
   ctx.save();
   ctx.font = "bold 14px 'Outfit', sans-serif";
   ctx.textBaseline = "middle";
-  
+
   const paddingX = 12;
   const paddingY = 6;
   const bottomMargin = 12;
   const leftMargin = 12;
   const rectH = 24;
-  
+
   if (state.remoteStream) {
     // 1. Draw Local User badge on left side
     const localText = state.localName;
     const localWidth = ctx.measureText(localText).width;
-    
+
     ctx.fillStyle = "#3b82f6"; // Blue
     drawRoundedRect(ctx, leftMargin, h - bottomMargin - rectH, localWidth + paddingX * 2, rectH, 12);
     ctx.fill();
-    
+
     ctx.fillStyle = "#ffffff";
     ctx.fillText(localText, leftMargin + paddingX, h - bottomMargin - rectH / 2 + 1);
-    
+
     // 2. Draw Remote User badge on right side
     const remoteText = state.remoteName;
     const remoteWidth = ctx.measureText(remoteText).width;
     const remoteLeft = w / 2 + leftMargin;
-    
+
     ctx.fillStyle = "#ec4899"; // Pink
     drawRoundedRect(ctx, remoteLeft, h - bottomMargin - rectH, remoteWidth + paddingX * 2, rectH, 12);
     ctx.fill();
-    
+
     ctx.fillStyle = "#ffffff";
     ctx.fillText(remoteText, remoteLeft + paddingX, h - bottomMargin - rectH / 2 + 1);
   } else {
     // Single local user mode
     const localText = state.localName;
     const localWidth = ctx.measureText(localText).width;
-    
+
     ctx.fillStyle = "#3b82f6";
     drawRoundedRect(ctx, leftMargin, h - bottomMargin - rectH, localWidth + paddingX * 2, rectH, 12);
     ctx.fill();
-    
+
     ctx.fillStyle = "#ffffff";
     ctx.fillText(localText, leftMargin + paddingX, h - bottomMargin - rectH / 2 + 1);
   }
@@ -1303,7 +1306,7 @@ function drawSprocketShape(ctx, sx, sy, w, h) {
   ctx.save();
   ctx.beginPath();
   if (state.frameStyle === 'pink') {
-    ctx.arc(sx + w/2, sy + h/2, w/2 + 1, 0, 2 * Math.PI);
+    ctx.arc(sx + w / 2, sy + h / 2, w / 2 + 1, 0, 2 * Math.PI);
   } else {
     if (ctx.roundRect) {
       ctx.roundRect(sx, sy, w, h, 2);
@@ -1311,7 +1314,7 @@ function drawSprocketShape(ctx, sx, sy, w, h) {
       ctx.rect(sx, sy, w, h);
     }
   }
-  
+
   if (state.frameStyle === 'black') {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
@@ -1325,7 +1328,7 @@ function drawSprocketShape(ctx, sx, sy, w, h) {
     ctx.fillStyle = '#451a03';
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
   }
-  
+
   ctx.fill();
   ctx.stroke();
   ctx.restore();
@@ -1333,7 +1336,7 @@ function drawSprocketShape(ctx, sx, sy, w, h) {
 
 function drawStripFrame(ctx, x, y, w, h) {
   ctx.save();
-  
+
   // 1. Draw strip background
   if (state.frameStyle === 'black') {
     ctx.fillStyle = '#121212';
@@ -1350,7 +1353,7 @@ function drawStripFrame(ctx, x, y, w, h) {
   } else if (state.frameStyle === 'kraft') {
     ctx.fillStyle = '#d7c49e';
     ctx.fillRect(x, y, w, h);
-    
+
     // Draw subtle Kraft paper speckles
     ctx.fillStyle = 'rgba(0,0,0,0.03)';
     for (let i = 0; i < 300; i++) {
@@ -1362,28 +1365,28 @@ function drawStripFrame(ctx, x, y, w, h) {
       ctx.fill();
     }
   }
-  
+
   // 2. Draw sprocket holes along left and right borders
   const sprocketCount = 15;
   const sprocketW = 8;
   const sprocketH = 14;
   const sprocketGap = h / sprocketCount;
-  
+
   for (let i = 0; i < sprocketCount; i++) {
     const sy = y + i * sprocketGap + (sprocketGap - sprocketH) / 2;
-    
+
     // Left sprocket
     const lx = x + 15;
     drawSprocketShape(ctx, lx, sy, sprocketW, sprocketH);
-    
+
     // Right sprocket
     const rx = x + w - 15 - sprocketW;
     drawSprocketShape(ctx, rx, sy, sprocketW, sprocketH);
   }
-  
+
   // 3. Draw markings and frame lines
   ctx.font = "bold 11px 'Courier New', monospace";
-  
+
   if (state.frameStyle === 'black') {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   } else if (state.frameStyle === 'white') {
@@ -1393,18 +1396,18 @@ function drawStripFrame(ctx, x, y, w, h) {
   } else if (state.frameStyle === 'kraft') {
     ctx.fillStyle = '#78350f';
   }
-  
+
   // Markings on the left margin (next to each row)
   const slotH = 400;
   const topPadding = 60;
   const photoGap = 20;
-  
+
   for (let i = 0; i < 3; i++) {
     const py = y + topPadding + i * (slotH + photoGap) + slotH / 2;
-    
+
     // Row Index
     ctx.fillText(`${i + 1}`, x + 28, py);
-    
+
     // Triangle arrow outline
     ctx.beginPath();
     ctx.moveTo(x + 28, py + 8);
@@ -1412,11 +1415,11 @@ function drawStripFrame(ctx, x, y, w, h) {
     ctx.lineTo(x + 28, py + 18);
     ctx.closePath();
     ctx.fill();
-    
+
     // Right side numbers
     const numVal = 40 + i;
     ctx.fillText(`${numVal}`, x + w - 38, py);
-    
+
     // neo photo label in the middle right
     if (i === 1) {
       ctx.save();
@@ -1427,7 +1430,7 @@ function drawStripFrame(ctx, x, y, w, h) {
       ctx.restore();
     }
   }
-  
+
   // 4. Draw logo/text stamps at the bottom margin of the strip
   ctx.textBaseline = "middle";
   if (state.frameStyle === 'black') {
@@ -1447,7 +1450,7 @@ function drawStripFrame(ctx, x, y, w, h) {
     ctx.font = "bold 15px 'Courier New', monospace";
     ctx.fillText("ASHLY HUB 2026", x + w / 2 - ctx.measureText("ASHLY HUB 2026").width / 2, y + h - 45);
   }
-  
+
   ctx.restore();
 }
 
@@ -1456,16 +1459,16 @@ function renderCapturedPhoto() {
 
   const slotW = 600;
   const slotH = 400;
-  
+
   // Calculate strip dimensions
   const topPadding = 60;
   const bottomPadding = 80;
   const sidePadding = 45;
   const photoGap = 20;
-  
+
   const stripW = slotW + sidePadding * 2;
   const stripH = topPadding + bottomPadding + 3 * slotH + 2 * photoGap;
-  
+
   // Canvas size depending on layout
   let canvasW, canvasH;
   if (state.stripLayout === 'double') {
@@ -1475,12 +1478,12 @@ function renderCapturedPhoto() {
     canvasW = stripW;
     canvasH = stripH;
   }
-  
+
   saveCanvas.width = canvasW;
   saveCanvas.height = canvasH;
   const ctx = saveCanvas.getContext('2d');
   ctx.clearRect(0, 0, canvasW, canvasH);
-  
+
   // Render strip backgrounds
   if (state.stripLayout === 'double') {
     drawStripFrame(ctx, 0, 0, stripW, stripH);
@@ -1488,14 +1491,14 @@ function renderCapturedPhoto() {
   } else {
     drawStripFrame(ctx, 0, 0, stripW, stripH);
   }
-  
+
   // Render the 3 captured photos
   const renderedSlots = [
     renderPhotoSlot(state.capturedPhotos[0], state.photoStyles[0], 0),
     renderPhotoSlot(state.capturedPhotos[1], state.photoStyles[1], 1),
     renderPhotoSlot(state.capturedPhotos[2], state.photoStyles[2], 2)
   ];
-  
+
   // Draw photos onto the canvas
   if (state.stripLayout === 'double') {
     // Left strip
@@ -1519,7 +1522,7 @@ function renderCapturedPhoto() {
 function applySharpnessFilter(ctx, width, height, value) {
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
-  
+
   const output = ctx.createImageData(width, height);
   const outData = output.data;
 
@@ -1532,7 +1535,7 @@ function applySharpnessFilter(ctx, width, height, value) {
       const idx = (y * width + x) * 4;
 
       for (let c = 0; c < 3; c++) {
-        const val = 
+        const val =
           data[idx + c] * center +
           (data[idx - 4 + c] + data[idx + 4 + c] + data[idx - width * 4 + c] + data[idx + width * 4 + c]) * edge;
         outData[idx + c] = Math.min(255, Math.max(0, val));
@@ -1546,14 +1549,14 @@ function applySharpnessFilter(ctx, width, height, value) {
 function applyGrainFilter(ctx, width, height, value) {
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
-  
+
   const intensity = (value / 100) * 40;
 
   for (let i = 0; i < data.length; i += 4) {
     const noise = (Math.random() - 0.5) * intensity;
     data[i] = Math.min(255, Math.max(0, data[i] + noise));
-    data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
-    data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
   }
   ctx.putImageData(imgData, 0, 0);
 }
@@ -1563,10 +1566,10 @@ document.querySelectorAll('.edit-photo-selector .style-card').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.edit-photo-selector .style-card').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
+
     const index = btn.getAttribute('data-index');
     state.activeEditIndex = index === 'all' ? 'all' : parseInt(index);
-    
+
     syncPreviewControlsUI();
     renderCapturedPhoto();
   });
@@ -1595,18 +1598,18 @@ document.querySelectorAll('#preview-styles-grid .style-card').forEach(card => {
   card.addEventListener('click', () => {
     document.querySelectorAll('#preview-styles-grid .style-card').forEach(c => c.classList.remove('active'));
     card.classList.add('active');
-    
+
     const selectedPreset = card.getAttribute('data-preview-style');
-    
+
     // Apply style to target
     if (state.activeEditIndex === 'all') {
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 6; i++) {
         state.photoStyles[i].selectedStyle = selectedPreset;
       }
     } else {
       state.photoStyles[state.activeEditIndex].selectedStyle = selectedPreset;
     }
-    
+
     renderCapturedPhoto();
     syncFiltersToPeer();
   });
@@ -1627,7 +1630,7 @@ function populatePreviewSliders() {
 
     const min = name === 'exposure' || name === 'temperature' || name === 'tint' ? -100 : (name === 'shadow' || name === 'highlight' ? -50 : 0);
     const max = name === 'brightness' || name === 'contrast' || name === 'saturation' || name === 'vibrance' ? 200 : (name === 'blur' ? 10 : 100);
-    
+
     let minLimit = min;
     if (name === 'brightness' || name === 'contrast' || name === 'vibrance') minLimit = 50;
 
@@ -1641,28 +1644,28 @@ function populatePreviewSliders() {
     }
 
     sliderGroup.innerHTML = `
-      <div class="slider-info">
-        <span class="slider-label" style="text-transform: capitalize">${name}</span>
-        <span class="slider-value" id="preview-val-${name}">${displayVal}</span>
-      </div>
-      <input type="range" id="preview-slider-${name}" min="${minLimit}" max="${max}" value="${currentFilters[name]}" class="filter-slider">
-    `;
+        <div class="slider-info">
+          <span class="slider-label" style="text-transform: capitalize">${name}</span>
+          <span class="slider-value" id="preview-val-${name}">${displayVal}</span>
+        </div>
+        <input type="range" id="preview-slider-${name}" min="${minLimit}" max="${max}" value="${currentFilters[name]}" class="filter-slider">
+      `;
 
     container.appendChild(sliderGroup);
 
     const previewSlider = sliderGroup.querySelector('input');
     previewSlider.addEventListener('input', (e) => {
       const val = parseInt(e.target.value);
-      
+
       // Update target
       if (state.activeEditIndex === 'all') {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 6; i++) {
           state.photoStyles[i].filters[name] = val;
         }
       } else {
         state.photoStyles[state.activeEditIndex].filters[name] = val;
       }
-      
+
       const label = document.getElementById(`preview-val-${name}`);
       if (name === 'brightness' || name === 'contrast' || name === 'saturation' || name === 'vibrance') {
         label.textContent = `${val}%`;
@@ -1674,7 +1677,7 @@ function populatePreviewSliders() {
 
       // Redraw canvas
       renderCapturedPhoto();
-      
+
       // Broadcast settings sync
       syncFiltersToPeer();
     });
@@ -1683,7 +1686,7 @@ function populatePreviewSliders() {
 
 document.getElementById('btn-preview-reset-filters').addEventListener('click', () => {
   if (state.activeEditIndex === 'all') {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 6; i++) {
       state.photoStyles[i].filters = { ...defaultFilters };
       state.photoStyles[i].selectedStyle = "original";
     }
@@ -1691,7 +1694,7 @@ document.getElementById('btn-preview-reset-filters').addEventListener('click', (
     state.photoStyles[state.activeEditIndex].filters = { ...defaultFilters };
     state.photoStyles[state.activeEditIndex].selectedStyle = "original";
   }
-  
+
   syncPreviewControlsUI();
   renderCapturedPhoto();
   syncFiltersToPeer();
@@ -1699,9 +1702,9 @@ document.getElementById('btn-preview-reset-filters').addEventListener('click', (
 
 document.getElementById('btn-save').addEventListener('click', () => {
   if (!state.capturedPhotos[0]) return;
-  
+
   renderCapturedPhoto();
-  
+
   const dataUrl = saveCanvas.toDataURL('image/jpeg', 0.95);
   const link = document.createElement('a');
   link.download = `photobooth_strip_${Date.now()}.jpg`;
@@ -1713,7 +1716,7 @@ document.getElementById('btn-save').addEventListener('click', () => {
 document.getElementById('btn-retake').addEventListener('click', () => {
   resetBoothCapture();
   showScreen('booth');
-  
+
   if (state.peerConnection && state.peerConnection.open) {
     state.peerConnection.send({
       type: 'RESET_BOOTH'
@@ -1722,27 +1725,27 @@ document.getElementById('btn-retake').addEventListener('click', () => {
 });
 
 /* ==========================================================================
-   9. MEDIAPIPE GESTURE HAND DETECTION
-   ========================================================================== */
+  9. MEDIAPIPE GESTURE HAND DETECTION
+  ========================================================================== */
 function isOpenHand(landmarks) {
   const wrist = landmarks[0];
   const getDist = (pt1, pt2) => Math.hypot(pt1.x - pt2.x, pt1.y - pt2.y);
-  
+
   const indexTipDist = getDist(landmarks[8], wrist);
   const middleTipDist = getDist(landmarks[12], wrist);
   const ringTipDist = getDist(landmarks[16], wrist);
   const pinkyTipDist = getDist(landmarks[20], wrist);
-  
+
   const indexKnuckleDist = getDist(landmarks[5], wrist);
   const middleKnuckleDist = getDist(landmarks[9], wrist);
   const ringKnuckleDist = getDist(landmarks[13], wrist);
   const pinkyKnuckleDist = getDist(landmarks[17], wrist);
-  
+
   const indexExtended = indexTipDist > indexKnuckleDist * 1.25;
   const middleExtended = middleTipDist > middleKnuckleDist * 1.25;
   const ringExtended = ringTipDist > ringKnuckleDist * 1.25;
   const pinkyExtended = pinkyTipDist > pinkyKnuckleDist * 1.25;
-  
+
   return indexExtended && middleExtended && ringExtended && pinkyExtended;
 }
 
@@ -1750,7 +1753,7 @@ let gestureLoopActive = false;
 
 function startGestureProcessing() {
   if (gestureLoopActive) return;
-  
+
   if (!state.handsDetector) {
     state.handsDetector = new Hands({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
@@ -1814,7 +1817,7 @@ function startGestureCountdown() {
   state.isCountingDown = true;
   state.countdownTime = 5;
   countdownNumber.textContent = state.countdownTime;
-  
+
   countdownOverlay.style.display = 'flex';
   feedbackAlert.style.display = 'block';
 
@@ -1833,7 +1836,7 @@ function startGestureCountdown() {
     const elapsed = Date.now() - startTime;
     const progress = Math.min(elapsed / totalDuration, 1);
     const strokeOffset = progress * 283;
-    
+
     countdownCircle.style.strokeDashoffset = strokeOffset;
 
     if (progress < 1) {
@@ -1849,7 +1852,7 @@ function startGestureCountdown() {
       state.isCountingDown = false;
       countdownOverlay.style.display = 'none';
       feedbackAlert.style.display = 'none';
-      
+
       executeShutterCapture();
     } else {
       countdownNumber.textContent = state.countdownTime;
@@ -1869,20 +1872,20 @@ function cancelGestureCountdown() {
 
 document.getElementById('btn-toggle-gesture').addEventListener('click', () => {
   state.gestureEnabled = !state.gestureEnabled;
-  
+
   if (state.gestureEnabled) {
     gestureStatus.classList.add('active');
     gestureStatus.querySelector('.status-text').textContent = "Palm Detection: On";
     document.getElementById('btn-toggle-gesture').classList.add('btn-primary');
     document.getElementById('btn-toggle-gesture').classList.remove('btn-secondary');
-    
+
     startGestureProcessing();
   } else {
     gestureStatus.classList.remove('active');
     gestureStatus.querySelector('.status-text').textContent = "Palm Detection: Off";
     document.getElementById('btn-toggle-gesture').classList.remove('btn-primary');
     document.getElementById('btn-toggle-gesture').classList.add('btn-secondary');
-    
+
     cancelGestureCountdown();
   }
 });
