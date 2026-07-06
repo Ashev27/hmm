@@ -35,15 +35,18 @@ const state = {
   },
   
   // Sequential capture state
-  currentCaptureStep: 0, // 0 (Row 1), 1 (Row 2), 2 (Row 3)
-  capturedPhotos: [null, null, null], // Stores raw canvases
+  currentCaptureStep: 0, // 0 (Row 1), 1 (Row 2), 2 (Row 3), etc.
+  capturedPhotos: [null, null, null, null, null, null], // Stores raw canvases
   photoStyles: [
+    { selectedStyle: "original", filters: { brightness: 100, contrast: 100, saturation: 100, exposure: 0, sharpness: 0, blur: 0, vibrance: 100, temperature: 0, tint: 0, vignette: 0, grain: 0, shadow: 0, highlight: 0, fade: 0 } },
+    { selectedStyle: "original", filters: { brightness: 100, contrast: 100, saturation: 100, exposure: 0, sharpness: 0, blur: 0, vibrance: 100, temperature: 0, tint: 0, vignette: 0, grain: 0, shadow: 0, highlight: 0, fade: 0 } },
+    { selectedStyle: "original", filters: { brightness: 100, contrast: 100, saturation: 100, exposure: 0, sharpness: 0, blur: 0, vibrance: 100, temperature: 0, tint: 0, vignette: 0, grain: 0, shadow: 0, highlight: 0, fade: 0 } },
     { selectedStyle: "original", filters: { brightness: 100, contrast: 100, saturation: 100, exposure: 0, sharpness: 0, blur: 0, vibrance: 100, temperature: 0, tint: 0, vignette: 0, grain: 0, shadow: 0, highlight: 0, fade: 0 } },
     { selectedStyle: "original", filters: { brightness: 100, contrast: 100, saturation: 100, exposure: 0, sharpness: 0, blur: 0, vibrance: 100, temperature: 0, tint: 0, vignette: 0, grain: 0, shadow: 0, highlight: 0, fade: 0 } },
     { selectedStyle: "original", filters: { brightness: 100, contrast: 100, saturation: 100, exposure: 0, sharpness: 0, blur: 0, vibrance: 100, temperature: 0, tint: 0, vignette: 0, grain: 0, shadow: 0, highlight: 0, fade: 0 } }
   ],
-  activeEditIndex: 0, // 0, 1, 2, or "all"
-  frameStyle: "black", // "black", "white", "pink", "kraft"
+  activeEditIndex: 0, // 0, 1, 2, 3, 4, 5, or "all"
+  frameStyle: "black", // "black", "white", "pink", "kraft", "fuji"
   stripLayout: "double", // "double", "single"
   
   // Gesture capture (MediaPipe)
@@ -76,26 +79,38 @@ const screens = {
   preview: document.getElementById('screen-preview')
 };
 
-// Live 3-row video and canvas arrays
+// Live 6-row video and canvas arrays
 const liveLocalVideos = [
   document.getElementById('webcam-0'),
   document.getElementById('webcam-1'),
-  document.getElementById('webcam-2')
+  document.getElementById('webcam-2'),
+  document.getElementById('webcam-3'),
+  document.getElementById('webcam-4'),
+  document.getElementById('webcam-5')
 ];
 const liveRemoteVideos = [
   document.getElementById('webcam-remote-0'),
   document.getElementById('webcam-remote-1'),
-  document.getElementById('webcam-remote-2')
+  document.getElementById('webcam-remote-2'),
+  document.getElementById('webcam-remote-3'),
+  document.getElementById('webcam-remote-4'),
+  document.getElementById('webcam-remote-5')
 ];
 const frozenCanvasesLocal = [
   document.getElementById('frozen-local-0'),
   document.getElementById('frozen-local-1'),
-  document.getElementById('frozen-local-2')
+  document.getElementById('frozen-local-2'),
+  document.getElementById('frozen-local-3'),
+  document.getElementById('frozen-local-4'),
+  document.getElementById('frozen-local-5')
 ];
 const frozenCanvasesRemote = [
   document.getElementById('frozen-remote-0'),
   document.getElementById('frozen-remote-1'),
-  document.getElementById('frozen-remote-2')
+  document.getElementById('frozen-remote-2'),
+  document.getElementById('frozen-remote-3'),
+  document.getElementById('frozen-remote-4'),
+  document.getElementById('frozen-remote-5')
 ];
 const stripRows = document.querySelectorAll('.strip-row');
 
