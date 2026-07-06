@@ -187,6 +187,78 @@
               <div class="row-num right">41</div>
               <div class="sprocket right"></div>
             </div>
+
+            <!-- Row 4 -->
+            <div class="strip-row" data-row="3">
+              <div class="sprocket left"></div>
+              <div class="row-num left">4</div>
+              
+              <div class="row-content">
+                <!-- Local Column -->
+                <div class="camera-panel" id="local-panel-3">
+                  <video id="webcam-3" class="live-local" autoplay playsinline muted></video>
+                  <canvas id="frozen-local-3" class="frozen-local" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-local-live">You</div>
+                </div>
+                <!-- Remote Column -->
+                <div class="camera-panel" id="remote-panel-3">
+                  <video id="webcam-remote-3" class="live-remote" autoplay playsinline></video>
+                  <canvas id="frozen-remote-3" class="frozen-remote" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-remote-live">Friend</div>
+                </div>
+              </div>
+              
+              <div class="row-num right">neo photo</div>
+              <div class="sprocket right"></div>
+            </div>
+
+            <!-- Row 5 -->
+            <div class="strip-row" data-row="4">
+              <div class="sprocket left"></div>
+              <div class="row-num left">5</div>
+              
+              <div class="row-content">
+                <!-- Local Column -->
+                <div class="camera-panel" id="local-panel-4">
+                  <video id="webcam-4" class="live-local" autoplay playsinline muted></video>
+                  <canvas id="frozen-local-4" class="frozen-local" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-local-live">You</div>
+                </div>
+                <!-- Remote Column -->
+                <div class="camera-panel" id="remote-panel-4">
+                  <video id="webcam-remote-4" class="live-remote" autoplay playsinline></video>
+                  <canvas id="frozen-remote-4" class="frozen-remote" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-remote-live">Friend</div>
+                </div>
+              </div>
+              
+              <div class="row-num right">42</div>
+              <div class="sprocket right"></div>
+            </div>
+
+            <!-- Row 6 -->
+            <div class="strip-row" data-row="5">
+              <div class="sprocket left"></div>
+              <div class="row-num left">6</div>
+              
+              <div class="row-content">
+                <!-- Local Column -->
+                <div class="camera-panel" id="local-panel-5">
+                  <video id="webcam-5" class="live-local" autoplay playsinline muted></video>
+                  <canvas id="frozen-local-5" class="frozen-local" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-local-live">You</div>
+                </div>
+                <!-- Remote Column -->
+                <div class="camera-panel" id="remote-panel-5">
+                  <video id="webcam-remote-5" class="live-remote" autoplay playsinline></video>
+                  <canvas id="frozen-remote-5" class="frozen-remote" style="display: none;"></canvas>
+                  <div class="name-badge-live badge-remote-live">Friend</div>
+                </div>
+              </div>
+              
+              <div class="row-num right">neo photo</div>
+              <div class="sprocket right"></div>
+            </div>
             
           </div>
           
@@ -227,31 +299,6 @@
             </div>
           </div>
         </div>
-          
-          <!-- Shared Effects Canvas Overlay (Hidden) -->
-          <canvas id="preview-canvas" style="display: none;"></canvas>
-          
-          <!-- Shutter Flash Overlay -->
-          <div id="shutter-flash" class="shutter-flash"></div>
-          
-          <!-- Vignette CSS Overlay -->
-          <div id="vignette-overlay" class="vignette-overlay"></div>
-          
-          <!-- Grain CSS Overlay -->
-          <div id="grain-overlay" class="grain-overlay"></div>
-          
-          <!-- Hand Sign Countdown Overlay -->
-          <div id="countdown-overlay" class="countdown-overlay">
-            <svg class="countdown-svg" viewBox="0 0 100 100">
-              <circle class="countdown-circle-bg" cx="50" cy="50" r="45"></circle>
-              <circle class="countdown-circle" id="countdown-circle" cx="50" cy="50" r="45"></circle>
-            </svg>
-            <div class="countdown-number" id="countdown-number">5</div>
-          </div>
-          
-          <!-- Feedback message overlay (e.g. Taking photo in 5s) -->
-          <div id="feedback-alert" class="feedback-alert">Taking photo in 5 seconds. Get ready.</div>
-        </div>
 
         <!-- Camera Actions Bar -->
         <div class="camera-actions">
@@ -286,6 +333,7 @@
               <option value="white">Minimal White</option>
               <option value="pink">Pastel Pink</option>
               <option value="kraft">Retro Kraft Card</option>
+              <option value="fuji">Retro Fujifilm Roll</option>
             </select>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
@@ -491,6 +539,9 @@
             <button class="style-card active" id="btn-edit-photo-0" data-index="0" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 1</button>
             <button class="style-card" id="btn-edit-photo-1" data-index="1" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 2</button>
             <button class="style-card" id="btn-edit-photo-2" data-index="2" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 3</button>
+            <button class="style-card" id="btn-edit-photo-3" data-index="3" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 4</button>
+            <button class="style-card" id="btn-edit-photo-4" data-index="4" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 5</button>
+            <button class="style-card" id="btn-edit-photo-5" data-index="5" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">Photo 6</button>
             <button class="style-card" id="btn-edit-photo-all" data-index="all" style="padding: 0.5rem 0.2rem; font-size: 0.75rem;">All</button>
           </div>
         </div>
