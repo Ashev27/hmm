@@ -48,6 +48,7 @@ const state = {
   activeEditIndex: 0, // 0, 1, 2, 3, 4, 5, or "all"
   frameStyle: "black", // "black", "white", "pink", "kraft", "fuji"
   stripLayout: "double", // "double", "single"
+  totalSteps: 3,
 
   // Gesture capture (MediaPipe)
   gestureEnabled: false,
@@ -171,6 +172,16 @@ window.addEventListener('DOMContentLoaded', () => {
       showScreen('booth');
     }
   }
+
+  // Apply initial pose count visibility
+  const rows = document.querySelectorAll('.strip-row');
+  rows.forEach((row, idx) => {
+    if (idx < state.totalSteps) {
+      row.style.display = 'flex';
+    } else {
+      row.style.display = 'none';
+    }
+  });
 });
 
 // Landing Actions
@@ -194,110 +205,7 @@ document.getElementById('btn-join-room').addEventListener('click', () => {
 });
 
 /* ==========================================================================
-  2. PIN LOCK SECURITY
-  ========================================================================== */
-const pinDots = document.querySelectorAll('.pin-dot');
-const pinErrorMsg = document.getElementById('pin-error-msg');
-
-function updatePinDisplay() {
-  pinDots.forEach((dot, index) => {
-    if (index < state.enteredPin.length) {
-      dot.classList.add('filled');
-    } else {
-      dot.classList.remove('filled');
-    }
-  });
-}
-
-function verifyPin() {
-  if (state.enteredPin === state.pinCode) {
-    pinErrorMsg.style.visibility = 'hidden';
-    state.enteredPin = "";
-    updatePinDisplay();
-    if (state.postPinAction) {
-      state.postPinAction();
-    } else {
-      showScreen('booth');
-    }
-  } else {
-    pinErrorMsg.style.visibility = 'visible';
-    // Shake feedback animation
-    const container = document.querySelector('.pin-container');
-    container.style.animation = 'shake 0.3s ease';
-    setTimeout(() => {
-      container.style.animation = '';
-      state.enteredPin = "";
-      updatePinDisplay();
-    }, 300);
-  }
-}
-
-// Click numpad buttons
-document.querySelectorAll('.numpad-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const val = btn.getAttribute('data-val');
-    if (val && state.enteredPin.length < 6) {
-      state.enteredPin += val;
-      updatePinDisplay();
-      if (state.enteredPin.length === 6) {
-        setTimeout(verifyPin, 150);
-      }
-    }
-  });
-});
-
-document.getElementById('numpad-clear').addEventListener('click', () => {
-  state.enteredPin = "";
-  updatePinDisplay();
-  pinErrorMsg.style.visibility = 'hidden';
-});
-
-document.getElementById('numpad-backspace').addEventListener('click', () => {
-  if (state.enteredPin.length > 0) {
-    state.enteredPin = state.enteredPin.slice(0, -1);
-    updatePinDisplay();
-    pinErrorMsg.style.visibility = 'hidden';
-  }
-});
-
-// Keyboard mapping for PIN
-window.addEventListener('keydown', (e) => {
-  if (!screens.pin.classList.contains('active')) return;
-
-  if (e.key >= '0' && e.key <= '9') {
-    if (state.enteredPin.length < 6) {
-      state.enteredPin += e.key;
-      updatePinDisplay();
-      if (state.enteredPin.length === 6) {
-        setTimeout(verifyPin, 150);
-      }
-    }
-  } else if (e.key === 'Backspace') {
-    if (state.enteredPin.length > 0) {
-      state.enteredPin = state.enteredPin.slice(0, -1);
-      updatePinDisplay();
-      pinErrorMsg.style.visibility = 'hidden';
-    }
-  } else if (e.key === 'Escape' || e.key === 'Delete') {
-    state.enteredPin = "";
-    updatePinDisplay();
-    pinErrorMsg.style.visibility = 'hidden';
-  }
-});
-
-// Inject Shake keyframes dynamically
-const pinAnim = document.createElement('style');
-pinAnim.innerHTML = `
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-8px); }
-    40%, 80% { transform: translateX(8px); }
-  }
-  `;
-document.head.appendChild(pinAnim);
-
-/* ==========================================================================
-  3. WEBCAM MANAGEMENT
+  2. WEBCAM MANAGEMENT
   ========================================================================== */
 async function startCamera() {
   stopCamera();
@@ -425,6 +333,7 @@ function initiateP2PConnection() {
         });
         waitingOverlay.style.display = 'none';
         roomStatusBadge.textContent = "Friend Connected";
+        updateCameraVisibility();
       });
 
       call.on('close', handlePeerDisconnect);
@@ -456,6 +365,7 @@ function initiateP2PConnection() {
           if (v) v.srcObject = stream;
         });
         roomStatusBadge.textContent = "Connected to Friend";
+        updateCameraVisibility();
       });
 
       call.on('close', handlePeerDisconnect);
@@ -528,6 +438,20 @@ function setupDataChannel() {
         }
         break;
 
+      case 'SYNC_POSE_COUNT':
+        state.totalSteps = data.poseCount;
+        document.getElementById('select-pose-count').value = data.poseCount;
+        const rows = document.querySelectorAll('.strip-row');
+        rows.forEach((row, idx) => {
+          if (idx < state.totalSteps) {
+            row.style.display = 'flex';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        resetBoothCapture();
+        break;
+
       case 'START_COUNTDOWN':
         if (!state.isCountingDown) {
           triggerShutterCountdown(false); // Trigger local run without resending signal
@@ -553,6 +477,7 @@ function handlePeerDisconnect() {
   remoteNameBadges.forEach(b => {
     b.textContent = state.remoteName;
   });
+  updateCameraVisibility();
 
   if (state.isHost) {
     waitingOverlay.style.display = 'flex';
@@ -580,6 +505,7 @@ function closeP2PConnection() {
   liveRemoteVideos.forEach(v => {
     if (v) v.srcObject = null;
   });
+  updateCameraVisibility();
 }
 
 // Copy sharing Link action
@@ -871,6 +797,7 @@ function resetBoothCapture() {
   }
 
   updateLiveFilters();
+  updateCameraVisibility();
 }
 
 // Shutter Click Handler
@@ -912,6 +839,32 @@ document.getElementById('select-strip-layout').addEventListener('change', (e) =>
       type: 'SYNC_STRIP_SETTINGS',
       frameStyle: state.frameStyle,
       stripLayout: state.stripLayout
+    });
+  }
+});
+
+// Pose count selector listener
+document.getElementById('select-pose-count').addEventListener('change', (e) => {
+  state.totalSteps = parseInt(e.target.value);
+  
+  // Hide/show live view rows dynamically
+  const rows = document.querySelectorAll('.strip-row');
+  rows.forEach((row, idx) => {
+    if (idx < state.totalSteps) {
+      row.style.display = 'flex';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  // Reset current capture step back to 0
+  resetBoothCapture();
+
+  // Sync to peer
+  if (state.peerConnection && state.peerConnection.open) {
+    state.peerConnection.send({
+      type: 'SYNC_POSE_COUNT',
+      poseCount: state.totalSteps
     });
   }
 });
@@ -1577,6 +1530,14 @@ document.querySelectorAll('.edit-photo-selector .style-card').forEach(btn => {
 
 // Sync styles/filters controls on the Preview panel
 function syncPreviewControlsUI() {
+  // Hide/show preview photo selector buttons dynamically
+  for (let i = 0; i < 6; i++) {
+    const btn = document.getElementById(`btn-edit-photo-${i}`);
+    if (btn) {
+      btn.style.display = i < state.totalSteps ? 'block' : 'none';
+    }
+  }
+
   const targetIndex = state.activeEditIndex === 'all' ? 0 : state.activeEditIndex;
   const targetStyle = state.photoStyles[targetIndex].selectedStyle;
 
