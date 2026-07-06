@@ -151,26 +151,19 @@ window.addEventListener('DOMContentLoaded', () => {
   if (hash.startsWith('#room-')) {
     const code = hash.replace('#room-', '');
     if (code) {
-      // Prompt PIN first, then set state and join
-      state.postPinAction = () => {
-        state.isHost = false;
-        state.roomCode = code;
-        showScreen('booth');
-      };
-      showScreen('pin');
+      state.isHost = false;
+      state.roomCode = code;
+      showScreen('booth');
     }
   }
 });
 
 // Landing Actions
 document.getElementById('btn-create-room').addEventListener('click', () => {
-  state.postPinAction = () => {
-    state.isHost = true;
-    state.roomCode = Math.floor(10000 + Math.random() * 90000).toString(); // 5-digit code
-    window.location.hash = `room-${state.roomCode}`;
-    showScreen('booth');
-  };
-  showScreen('pin');
+  state.isHost = true;
+  state.roomCode = Math.floor(10000 + Math.random() * 90000).toString(); // 5-digit code
+  window.location.hash = `room-${state.roomCode}`;
+  showScreen('booth');
 });
 
 document.getElementById('btn-join-room').addEventListener('click', () => {
@@ -179,13 +172,10 @@ document.getElementById('btn-join-room').addEventListener('click', () => {
     alert("Please enter a valid room code.");
     return;
   }
-  state.postPinAction = () => {
-    state.isHost = false;
-    state.roomCode = code;
-    window.location.hash = `room-${state.roomCode}`;
-    showScreen('booth');
-  };
-  showScreen('pin');
+  state.isHost = false;
+  state.roomCode = code;
+  window.location.hash = `room-${state.roomCode}`;
+  showScreen('booth');
 });
 
 /* ==========================================================================
